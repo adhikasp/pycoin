@@ -5,7 +5,7 @@ import time
 
 
 MINER_REWARD = 1
-
+MAX_TX_PER_BLOCK = 5
 
 class BlockChain:
 	def __init__(self):
@@ -20,27 +20,55 @@ class BlockChain:
 		# Miner reward
 		self.pending_transaction.append(
 			Transaction('0', miner, MINER_REWARD))
-		new_block = Block(self.pending_transaction, self.head)
-		self.update_state(new_block)
-		self.pending_transaction = []
+
+		# Prepare and validate tx
+		inserted_tx = []
+		while (len(inserted_tx) < MAX_TX_PER_BLOCK 
+				and len(self.pending_transaction)):
+			tx = self.pending_transaction.pop(0)
+			if self.update_state(tx):
+				inserted_tx.append(tx)
+
+		# Archive the tx on the blockchain
+		new_block = Block(inserted_tx, self.head)
 		self.head = new_block
 
-	def update_state(self, block):
+	def is_valid_transaction(self, transaction):
+		if transaction.sender == '0':
+			if transaction.amount != MINER_REWARD:
+				print('Block miner reward is not right.')
+				return False
+		elif self.state[transaction.sender] < transaction.amount:
+			print("Insufficient balance for account '{}'"
+				  .format(transaction.sender))
+			return False
+		return True
+
+	def update_state(self, tx):
 		state = self.state.copy()
-		for transaction in block.transactions:
-			if transaction.sender != '0':
-				state[transaction.sender] -= transaction.amount
-			state[transaction.recepient] += transaction.amount
-		self.state = state
+		if self.is_valid_transaction(tx):
+			state[tx.sender] -= tx.amount
+			state[tx.recepient] += tx.amount
+			self.state = state
+			return True
+		return False
 
 	def new_transaction(self, transaction):
 		self.pending_transaction.append(transaction)
 
 	def print_chain(self):
+		print('Current state')
+		json_dump = json.dumps(
+			self.state, 
+			sort_keys=True, 
+			default=lambda o: o.__dict__, 
+			indent=4,)
+		
+		print('Blockchain')
 		current_block = self.head
 		while current_block != None:
 			json_dump = json.dumps(
-				self.__dict__, 
+				current_block, 
 				sort_keys=True, 
 				default=lambda o: o.__dict__, 
 				indent=4,)
