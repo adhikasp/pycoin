@@ -4,7 +4,6 @@ import time
 
 
 class BlockChain:
-	
 	def __init__(self):
 		self.pending_transaction = []
 		self.head = None
@@ -33,7 +32,6 @@ class BlockChain:
 
 
 class Block:
-
 	def __init__(self, transactions, previous_block):
 		self.timestamp = time.time()
 		self.transactions = transactions
@@ -49,7 +47,6 @@ class Block:
 
 
 class Transaction:
-
 	def __init__(self, sender, recepient, amount):
 		self.sender = sender
 		self.recepient = recepient
