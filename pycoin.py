@@ -1,20 +1,37 @@
+from collections import defaultdict
 import hashlib
 import json
 import time
 
 
+MINER_REWARD = 1
+
+
 class BlockChain:
 	def __init__(self):
 		self.pending_transaction = []
+		self.state = defaultdict(lambda: 0)
 		self.head = None
 
 	def last_block(self):
 		return self.head
 
-	def new_block(self):
+	def new_block(self, miner):
+		# Miner reward
+		self.pending_transaction.append(
+			Transaction('0', miner, MINER_REWARD))
 		new_block = Block(self.pending_transaction, self.head)
+		self.update_state(new_block)
 		self.pending_transaction = []
 		self.head = new_block
+
+	def update_state(self, block):
+		state = self.state.copy()
+		for transaction in block.transactions:
+			if transaction.sender != '0':
+				state[transaction.sender] -= transaction.amount
+			state[transaction.recepient] += transaction.amount
+		self.state = state
 
 	def new_transaction(self, transaction):
 		self.pending_transaction.append(transaction)
@@ -57,6 +74,8 @@ class Transaction:
 		json_dump = json.dumps(self.__dict__, sort_keys=True).encode()
 		return hashlib.sha256(json_dump).hexdigest()
 
+
 b = BlockChain()
+b.new_block('saya')
+b.new_block('saya')
 b.new_transaction(Transaction('saya', 'dia', 1))
-b.new_block()
