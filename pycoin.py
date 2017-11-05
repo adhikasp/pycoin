@@ -44,7 +44,7 @@ class BlockChain:
 		assert block.previous_block == self.head
 		for tx in block.transactions:
 			if not all(self.apply_tx(tx)):
-				print('Block '{}' contain invalid tx. '
+				print("Block '{}' contain invalid tx. "
 					  'Reverting blockchain.')
 				self.state = old_state
 				return False
