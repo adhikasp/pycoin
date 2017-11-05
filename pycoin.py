@@ -16,7 +16,10 @@ class BlockChain:
 	def last_block(self):
 		return self.head
 
-	def new_block(self, miner):
+	def mine_block(self, miner):
+		"""
+		Mine a block
+		"""
 		# Miner reward
 		self.pending_transaction.append(
 			Transaction('0', miner, MINER_REWARD))
@@ -26,12 +29,36 @@ class BlockChain:
 		while (len(inserted_tx) < MAX_TX_PER_BLOCK 
 				and len(self.pending_transaction)):
 			tx = self.pending_transaction.pop(0)
-			if self.update_state(tx):
+			if self.apply_tx(tx):
 				inserted_tx.append(tx)
 
 		# Archive the tx on the blockchain
 		new_block = Block(inserted_tx, self.head)
 		self.head = new_block
+
+	def apply_block(self, block):
+		"""
+		Apply a block to current blockchain
+		"""
+		old_state = self.state.copy()
+		assert block.previous_block == self.head
+		for tx in block.transactions:
+			if not all(self.apply_tx(tx)):
+				print('Block '{}' contain invalid tx. '
+					  'Reverting blockchain.')
+				self.state = old_state
+				return False
+		self.head = block
+		return True
+
+	def apply_tx(self, tx):
+		state = self.state.copy()
+		if self.is_valid_transaction(tx):
+			state[tx.sender] -= tx.amount
+			state[tx.recepient] += tx.amount
+			self.state = state
+			return True
+		return False
 
 	def is_valid_transaction(self, transaction):
 		if transaction.sender == '0':
@@ -43,15 +70,6 @@ class BlockChain:
 				  .format(transaction.sender))
 			return False
 		return True
-
-	def update_state(self, tx):
-		state = self.state.copy()
-		if self.is_valid_transaction(tx):
-			state[tx.sender] -= tx.amount
-			state[tx.recepient] += tx.amount
-			self.state = state
-			return True
-		return False
 
 	def new_transaction(self, transaction):
 		self.pending_transaction.append(transaction)
@@ -104,6 +122,6 @@ class Transaction:
 
 
 b = BlockChain()
-b.new_block('saya')
-b.new_block('saya')
+b.mine_block('saya')
+b.mine_block('saya')
 b.new_transaction(Transaction('saya', 'dia', 1))
