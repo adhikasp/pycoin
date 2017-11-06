@@ -16,6 +16,17 @@ class BlockChain:
 	def last_block(self):
 		return self.head
 
+	def get_block(self, block_hash):
+		block = self.head
+		while block.hash != block_hash or block != None:
+			block = block.previous_block
+
+		if block == None:
+			print("No block with hash '{}' found"
+				  .format(block_hash))
+			return False
+		return block
+
 	def mine_block(self, miner):
 		"""
 		Mine a block
