@@ -136,3 +136,12 @@ b = BlockChain()
 b.mine_block('saya')
 b.mine_block('saya')
 b.new_transaction(Transaction('saya', 'dia', 1))
+if __name__ == '__main__':
+	b = BlockChain()
+	b.mine_block('saya')
+	b.mine_block('saya')
+	b.new_transaction(Transaction('saya', 'dia', 1))
+	b.mine_block('saya')
+	print(b.state)
+	assert b.state['saya'] == 2
+	assert b.state['dia'] == 1
